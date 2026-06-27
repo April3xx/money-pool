@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0E3B36">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Interest Split">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Interest Split</title>
+<style>
+:root{
+  --bg:#EAEEEB; --card:#FFFFFF; --brand:#0E3B36; --brand-2:#14504A;
+  --text:#16231F; --dim:#5E6B66; --faint:#8A958F;
+  --accent:#A8772A; --accent-soft:#C79A4E;
+  --pos:#1C7A52; --neg:#B14A33; --line:#DCE3DF; --line-2:#EBF0ED;
+  --shadow:0 1px 2px rgba(14,40,36,.06),0 6px 20px rgba(14,40,36,.06);
+  --r:16px; --r-sm:11px;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1513; --card:#172120; --brand:#0B2B27; --brand-2:#103832;
+    --text:#E7EDEA; --dim:#9FACA6; --faint:#74827C;
+    --accent:#D2A659; --accent-soft:#B98E45;
+    --pos:#54B98C; --neg:#E0815F; --line:#26312E; --line-2:#1E2825;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font-sans); background:var(--bg); color:var(--text);
+  font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(74px + env(safe-area-inset-bottom));
+}
+.num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
+.eyebrow{font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.13em; font-size:10.5px; color:var(--dim)}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+input,select{font-family:inherit; font-size:16px}
+
+/* Header */
+.app-header{
+  position:sticky; top:0; z-index:30; background:var(--brand); color:#EAF4F1;
+  padding:calc(env(safe-area-inset-top) + 12px) 18px 12px; 
+  display:flex; align-items:center; justify-content:space-between;
+}
+.wordmark .eyebrow{color:#7FB3A9}
+.wordmark h1{margin:1px 0 0; font-size:19px; font-weight:650; letter-spacing:-.01em; color:#F2FAF7}
+.hbtn{width:38px;height:38px;border-radius:11px; display:grid;place-items:center; color:#CFE6E0; background:rgba(255,255,255,.08)}
+.hbtn:active{background:rgba(255,255,255,.16)}
+.hbtn svg{width:21px;height:21px}
+
+/* Layout */
+main{padding:16px 14px 24px; max-width:560px; margin:0 auto}
+.section-label{display:flex;align-items:center;justify-content:space-between; margin:4px 2px 10px}
+.section-label .eyebrow{color:var(--faint)}
+
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+.stack>*+*{margin-top:10px}
+
+/* People cards */
+.person{display:flex; align-items:center; gap:13px; padding:14px 15px}
+.avatar{width:42px;height:42px;border-radius:13px; flex:none; display:grid;place-items:center; font-weight:650; font-size:16px; color:#fff}
+.person .meta{flex:1; min-width:0}
+.person .name{font-weight:600; font-size:16px; letter-spacing:-.01em; white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person .sub{color:var(--dim); font-size:12.5px; margin-top:1px}
+.person .bal{text-align:right; flex:none}
+.person .bal .v{font-weight:650; font-size:16px; letter-spacing:-.02em}
+.person .bal .l{font-size:10.5px;color:var(--faint); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.08em}
+.chev{color:var(--faint); flex:none}
+.chev svg{width:18px;height:18px;display:block}
+
+/* Activity rows */
+.act{display:flex; gap:12px; padding:13px 15px; align-items:center}
+.act .dot{width:9px;height:9px;border-radius:50%; flex:none; margin-top:1px}
+.act .body{flex:1; min-width:0}
+.act .top{display:flex;justify-content:space-between;gap:10px; align-items:baseline}
+.act .who{font-weight:600; font-size:15px; white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act .amt{font-weight:650; font-size:15px; letter-spacing:-.02em; flex:none}
+.act .when{color:var(--dim); font-size:12.5px; margin-top:1px; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.tag{font-family:var(--font-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.07em; padding:2px 6px; border-radius:6px; background:rgba(168,119,42,.13); color:var(--accent)}
+.divider{height:1px;background:var(--line-2); margin:0 15px}
+
+/* Interest */
+.round-bar{display:flex; align-items:stretch; gap:8px; margin-bottom:14px}
+.round-bar .lbl{flex:1; text-align:center; padding:11px 8px}
+.round-bar .lbl .eyebrow{color:var(--faint)}
+.round-bar .lbl .rng{font-weight:650; font-size:15px; letter-spacing:-.01em; margin-top:3px}
+.round-bar .lbl .st{font-size:11px;color:var(--dim); margin-top:2px}
+.stepper{width:46px; display:grid;place-items:center; color:var(--brand); background:var(--card); border:1px solid var(--line); border-radius:var(--r-sm)}
+.stepper:active{background:var(--line-2)}
+.stepper svg{width:20px;height:20px}
+.stepper[disabled]{color:var(--faint); opacity:.5}
+
+.interest-input{padding:15px 16px}
+.interest-input label{display:block}
+.interest-input .row{display:flex; align-items:center; gap:10px; margin-top:9px}
+.cur{font-weight:650; font-size:21px; color:var(--accent)}
+.interest-input input{
+  flex:1; border:none; background:transparent; color:var(--text);
+  font-size:25px; font-weight:650; letter-spacing:-.02em; padding:4px 0; min-width:0;
+  border-bottom:2px solid var(--line); outline:none;
+}
+.interest-input input:focus{border-color:var(--accent)}
+.interest-input input:disabled{color:var(--dim); border-color:transparent}
+.locknote{font-size:12px;color:var(--dim); margin-top:8px; display:flex;gap:6px;align-items:center}
+
+.split-row{padding:14px 15px}
+.split-row .head{display:flex;justify-content:space-between; gap:10px; align-items:baseline}
+.split-row .nm{font-weight:600; font-size:15.5px}
+.split-row .iv{font-weight:700; font-size:16px; letter-spacing:-.02em; color:var(--accent)}
+.split-row .iv.zero{color:var(--faint)}
+.split-row .stats{display:flex; gap:14px; margin-top:3px; color:var(--dim); font-size:12.5px}
+.spark{margin-top:10px; width:100%; height:38px; display:block}
+.spark .cap{font-size:10px}
+
+.total-card{padding:15px 16px}
+.kv{display:flex;justify-content:space-between; align-items:baseline; padding:6px 0}
+.kv+.kv{border-top:1px solid var(--line-2)}
+.kv .k{color:var(--dim); font-size:13.5px}
+.kv .k small{display:block; color:var(--faint); font-size:11px; margin-top:1px}
+.kv .v{font-weight:650; letter-spacing:-.01em}
+.kv .v.accent{color:var(--accent)}
+.kv .v.warnv{color:var(--neg)}
+.kv .v.okv{color:var(--pos)}
+
+.btn{
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  padding:15px; border-radius:13px; font-weight:650; font-size:15.5px; letter-spacing:-.01em;
+}
+.btn-primary{background:var(--brand); color:#F2FAF7}
+.btn-primary:active{background:var(--brand-2)}
+.btn-gold{background:var(--accent); color:#1a1206}
+.btn-gold:active{filter:brightness(.94)}
+.btn[disabled]{opacity:.45}
+.btn-ghost{background:transparent; border:1px solid var(--line); color:var(--text)}
+.posted-note{display:flex; align-items:center; justify-content:center; gap:9px; padding:13px; color:var(--pos); font-weight:600; font-size:14.5px}
+.linklike{color:var(--accent); font-weight:600; text-decoration:underline; font-size:13.5px; text-align:center; display:block; padding:6px}
+
+/* Empty states */
+.empty{text-align:center; padding:46px 26px; color:var(--dim)}
+.empty .ic{width:54px;height:54px;border-radius:16px; background:var(--line-2); display:grid;place-items:center; margin:0 auto 16px; color:var(--accent)}
+.empty .ic svg{width:26px;height:26px}
+.empty h3{margin:0 0 6px; color:var(--text); font-size:17px; font-weight:650}
+.empty p{margin:0 auto; max-width:280px; font-size:14px; line-height:1.5}
+.empty .btn{max-width:240px; margin:20px auto 0}
+
+/* FAB */
+.fab{
+  position:fixed; right:18px; bottom:calc(82px + env(safe-area-inset-bottom)); z-index:40;
+  width:58px;height:58px;border-radius:19px; background:var(--accent); color:#1a1206;
+  display:grid;place-items:center; box-shadow:0 6px 22px rgba(168,119,42,.4);
+}
+.fab:active{filter:brightness(.94)}
+.fab svg{width:26px;height:26px}
+
+/* Bottom nav */
+.nav{
+  position:fixed; left:0;right:0;bottom:0; z-index:35;
+  background:var(--card); border-top:1px solid var(--line);
+  display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+.nav button{flex:1; display:flex;flex-direction:column;align-items:center; gap:4px; color:var(--faint); padding:4px}
+.nav button .lab{font-size:11px; font-weight:600; font-family:var(--font-mono); letter-spacing:.04em}
+.nav button svg{width:24px;height:24px}
+.nav button.on{color:var(--brand)}
+@media (prefers-color-scheme: dark){.nav button.on{color:var(--accent-soft)}}
+
+/* Sheet + overlay */
+#overlay{position:fixed; inset:0; background:rgba(8,20,18,.45); z-index:50; opacity:0; pointer-events:none; transition:opacity .2s}
+#overlay.show{opacity:1; pointer-events:auto}
+.sheet{
+  position:fixed; left:0;right:0;bottom:0; z-index:60; background:var(--card);
+  border-radius:22px 22px 0 0; transform:translateY(100%); transition:transform .26s cubic-bezier(.2,.8,.2,1);
+  max-height:92vh; overflow:auto; padding-bottom:calc(18px + env(safe-area-inset-bottom));
+  max-width:560px; margin:0 auto;
+}
+.sheet.show{transform:translateY(0)}
+.grab{width:38px;height:4px;border-radius:3px;background:var(--line); margin:10px auto 4px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between; padding:6px 18px 8px}
+.sheet-head h2{font-size:18px;font-weight:650; margin:0; letter-spacing:-.01em}
+.sheet-head .x{width:34px;height:34px;border-radius:10px;display:grid;place-items:center; color:var(--dim); background:var(--line-2)}
+.sheet-body{padding:6px 18px 4px}
+
+/* Forms */
+.field{margin:14px 0}
+.field>label{display:block; font-weight:600; font-size:13px; color:var(--dim); margin-bottom:7px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.05em; font-size:11px}
+.field input[type=text],.field input[type=number],.field input[type=date],.field select{
+  width:100%; padding:13px 14px; border:1px solid var(--line); border-radius:12px;
+  background:var(--bg); color:var(--text); outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--accent); background:var(--card)}
+.seg{display:flex; gap:8px}
+.seg button{flex:1; padding:13px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--dim); font-weight:600; display:flex;align-items:center;justify-content:center;gap:7px}
+.seg button .d{width:9px;height:9px;border-radius:50%}
+.seg button.sel-in{border-color:var(--pos); background:rgba(28,122,82,.1); color:var(--pos)}
+.seg button.sel-out{border-color:var(--neg); background:rgba(177,74,51,.1); color:var(--neg)}
+.amt-field{display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:12px; background:var(--bg); padding:0 14px}
+.amt-field:focus-within{border-color:var(--accent); background:var(--card)}
+.amt-field span{font-weight:650; color:var(--accent); font-size:18px}
+.amt-field input{flex:1; border:none; background:transparent; color:var(--text); font-size:20px; font-weight:600; padding:13px 0; outline:none; min-width:0}
+.err{color:var(--neg); font-size:12.5px; margin-top:6px; min-height:0}
+.form-actions{display:flex; gap:10px; margin-top:18px}
+.form-actions .btn{flex:1}
+.btn-danger{background:transparent; color:var(--neg); border:1px solid var(--line)}
+
+/* Menu list */
+.menu-item{display:flex; align-items:center; gap:14px; padding:15px 6px; border-bottom:1px solid var(--line-2); width:100%; text-align:left}
+.menu-item:last-child{border-bottom:none}
+.menu-item .mi-ic{width:38px;height:38px;border-radius:11px; background:var(--line-2); display:grid;place-items:center; color:var(--brand); flex:none}
+.menu-item .mi-ic svg{width:20px;height:20px}
+.menu-item .mt{font-weight:600; font-size:15px}
+.menu-item .ms{font-size:12.5px; color:var(--dim)}
+.menu-item.danger .mt{color:var(--neg)} .menu-item.danger .mi-ic{color:var(--neg)}
+
+/* Ledger overlay */
+.ledger-head{display:flex; align-items:center; gap:12px; padding:4px 2px 14px}
+.ledger-head .back{width:38px;height:38px;border-radius:11px;display:grid;place-items:center; background:var(--card); border:1px solid var(--line); color:var(--text)}
+.ledger-head .lh-main{flex:1}
+.ledger-head .lh-main .nm{font-weight:650; font-size:18px; letter-spacing:-.01em}
+.ledger-head .lh-main .bl{color:var(--dim); font-size:13px}
+.ledge-row{display:flex; justify-content:space-between; gap:12px; padding:13px 15px; align-items:center}
+.ledge-row .ld-l{min-width:0}
+.ledge-row .ld-l .dsc{font-weight:600; font-size:14.5px; display:flex; gap:8px; align-items:center}
+.ledge-row .ld-l .dt{color:var(--dim); font-size:12px; margin-top:1px}
+.ledge-row .ld-r{text-align:right; flex:none}
+.ledge-row .ld-r .a{font-weight:650; letter-spacing:-.02em}
+.ledge-row .ld-r .run{font-size:11.5px;color:var(--faint); font-family:var(--font-mono)}
+
+/* Toast */
+#toast{position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); z-index:80;
+  background:var(--text); color:var(--bg); padding:12px 18px; border-radius:12px; font-size:13.5px; font-weight:600;
+  opacity:0; pointer-events:none; transition:all .25s; max-width:90vw; text-align:center; box-shadow:var(--shadow)}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+.callout{background:rgba(168,119,42,.08); border:1px solid rgba(168,119,42,.25); border-radius:12px; padding:12px 14px; font-size:13px; color:var(--text); line-height:1.5}
+.callout b{color:var(--accent)}
+.muted-note{color:var(--dim); font-size:12.5px; line-height:1.5; padding:2px 4px 0}
+.howto p{margin:0 0 12px; font-size:14px; line-height:1.55}
+.howto h4{margin:18px 0 6px; font-size:14px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--accent)}
+.howto code{background:var(--line-2); padding:2px 6px; border-radius:6px; font-family:var(--font-mono); font-size:12.5px}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="wordmark">
+    <div class="eyebrow">Pooled account</div>
+    <h1>Interest Split</h1>
+  </div>
+  <button class="hbtn" data-action="menu" aria-label="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+  </button>
+</header>
+
+<main id="view"></main>
+
+<button class="fab" id="fab" data-action="quick-add" aria-label="Add transaction" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<nav class="nav">
+  <button data-nav="people" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.9-4.6 5.5-4.6S14 16 14.5 19"/><path d="M16 5.2a3 3 0 0 1 0 5.8M17 14.6c2.2.5 3.7 2 4.2 4.4"/></svg>
+    <span class="lab">People</span>
+  </button>
+  <button data-nav="activity">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 14L18 9l1.5 3H21"/></svg>
+    <span class="lab">Activity</span>
+  </button>
+  <button data-nav="interest">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 14.5c.4.9 1.3 1.5 2.5 1.5 1.4 0 2.4-.8 2.4-2 0-2.6-4.6-1.6-4.6-4 0-1.1 1-1.9 2.3-1.9 1.1 0 2 .5 2.4 1.4M12 6.5v1.6M12 16v1.6"/></svg>
+    <span class="lab">Interest</span>
+  </button>
+</nav>
+
+<div id="overlay" data-action="dismiss"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div id="sheet-content"></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------- State ---------- */
+const STORE_KEY = "interestSplit:v1";
+let state = blankState();
+let storageOk = true;
+let ui = { route:"people", personId:null, roundIndex:null };
+const PALETTE = ["#0E6E5A","#A8772A","#3D5A99","#9A3F6E","#2F7D8C","#8C5A2F","#5E6B2F","#7A3F9A"];
+
+function blankState(){ return { people:[], txns:[], rounds:{}, settings:{ currency:"฿", rate:2.9, dayCount:365 } }; }
+function normalize(){
+  if(!state || typeof state!=="object") state = blankState();
+  state.people ??= []; state.txns ??= []; state.rounds ??= {};
+  state.settings ??= {}; state.settings.currency ??= "฿"; state.settings.rate ??= 2.9; state.settings.dayCount ??= 365;
+}
+async function load(){
+  // 1) Claude's storage (when opened inside Claude)
+  try{ if(window.storage){ const r = await window.storage.get(STORE_KEY); if(r && r.value){ state = JSON.parse(r.value); normalize(); return; } } }
+  catch(e){}
+  // 2) The phone browser's own storage (when run as a saved app on your device)
+  try{ if(window.localStorage){ const v = localStorage.getItem(STORE_KEY); if(v) state = JSON.parse(v); } }
+  catch(e){}
+  normalize();
+}
+async function save(){
+  normalize();
+  const json = JSON.stringify(state);
+  let saved = false;
+  try{ if(window.storage){ await window.storage.set(STORE_KEY, json); saved = true; } }catch(e){}
+  if(!saved){ try{ if(window.localStorage){ localStorage.setItem(STORE_KEY, json); saved = true; } }catch(e){} }
+  storageOk = saved;
+  if(!saved) toast("Couldn’t save on this device — use Export to back up");
+}
+const uid = () => "id_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,7);
+
+/* ---------- Date + money helpers ---------- */
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function dayNum(iso){ const [y,m,d]=iso.split("-").map(Number); return Math.floor(Date.UTC(y,m-1,d)/86400000); }
+function daysBetween(a,b){ return dayNum(b)-dayNum(a); }
+function fmtDate(iso){ const [y,m,d]=iso.split("-").map(Number); return String(d).padStart(2,"0")+" "+MONTHS[m-1]+" "+y; }
+function fmtShort(iso){ const [y,m,d]=iso.split("-").map(Number); return String(d).padStart(2,"0")+" "+MONTHS[m-1]; }
+function todayIso(){ const t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); }
+function money(n){ const v = Math.round((n+Number.EPSILON)*100)/100; return state.settings.currency + v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function moneyPlain(n){ const v = Math.round((n+Number.EPSILON)*100)/100; return v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function mdFmt(n){ return Math.round(n).toLocaleString("en-US"); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- Core finance logic ---------- */
+const signed = t => (t.type==="in" ? t.amount : -t.amount);
+function personTxns(pid){ return state.txns.filter(t=>t.personId===pid).sort((a,b)=>dayNum(a.date)-dayNum(b.date) || (a.system?1:-1)); }
+function currentBalance(pid){ return state.txns.filter(t=>t.personId===pid).reduce((s,t)=>s+signed(t),0); }
+
+// Money-days for one person over round [S,E]. Returns {total, opening, segments[], maxBalance}
+function moneyDays(pid, S, E){
+  const tx = state.txns.filter(t=>t.personId===pid);
+  let opening = 0;
+  for(const t of tx){ if(dayNum(t.date)<=dayNum(S)) opening += signed(t); }
+  const bset = [];
+  for(const t of tx){ const dn=dayNum(t.date); if(dn>dayNum(S) && dn<dayNum(E)) bset.push(t.date); }
+  const breaks = [...new Set(bset)].sort((a,b)=>dayNum(a)-dayNum(b));
+  const points = [S, ...breaks, E];
+  let bal = opening, total = 0, maxB = Math.max(0, opening);
+  const segments = [];
+  for(let i=0;i<points.length-1;i++){
+    const a = points[i], b = points[i+1];
+    const d = daysBetween(a,b);
+    const md = bal*d;
+    segments.push({ start:a, end:b, balance:bal, days:d, md });
+    total += md;
+    let delta = 0;
+    for(const t of tx){ if(t.date===b) delta += signed(t); }
+    bal += delta;
+    if(bal>maxB) maxB = bal;
+  }
+  return { total, opening, segments, maxBalance:maxB };
+}
+
+function roundSplit(S, E, totalInterest){
+  const rows = state.people.map(p=>{ const r = moneyDays(p.id,S,E); return { person:p, md:r.total, segments:r.segments, maxBalance:r.maxBalance }; });
+  const totalMD = rows.reduce((s,r)=>s+r.md,0);
+  rows.forEach(r=>{ r.share = totalMD>0 ? r.md/totalMD : 0; r.interest = (totalInterest!=null) ? r.share*totalInterest : null; });
+  if(totalInterest!=null && totalMD>0){
+    const rounded = roundToSum(rows.map(r=>r.interest), totalInterest, 2);
+    rows.forEach((r,i)=> r.interestRounded = rounded[i]);
+  }
+  return { rows, totalMD };
+}
+
+// Largest-remainder rounding so displayed shares sum exactly to total.
+function roundToSum(values, total, dp){
+  const f = Math.pow(10,dp);
+  const target = Math.round(total*f);
+  const floors = values.map(v=>Math.floor(v*f + 1e-9));
+  let rem = target - floors.reduce((a,b)=>a+b,0);
+  const order = values.map((v,i)=>({ i, frac:(v*f) - floors[i] })).sort((a,b)=>b.frac-a.frac);
+  const out = floors.slice();
+  for(let k=0; k<rem && order.length; k++) out[order[k % order.length].i] += 1;
+  return out.map(x=>x/f);
+}
+
+/* ---------- Rounds ---------- */
+function roundBoundaries(){
+  const dates = state.txns.map(t=>t.date);
+  const ty = new Date().getFullYear();
+  const years = dates.length ? dates.map(d=>+d.slice(0,4)) : [ty];
+  const minY = Math.min(...years) - 1;
+  const maxY = Math.max(Math.max(...years), ty) + 1;
+  const b = [];
+  for(let y=minY; y<=maxY; y++){ b.push(y+"-06-21"); b.push(y+"-12-21"); }
+  return b.sort((a,b2)=>dayNum(a)-dayNum(b2));
+}
+function allRounds(){
+  const b = roundBoundaries(); const rs = [];
+  for(let i=0;i<b.length-1;i++) rs.push({ start:b[i], end:b[i+1] });
+  return rs;
+}
+function relevantRounds(){
+  const rs = allRounds();
+  const dates = state.txns.map(t=>dayNum(t.date));
+  const today = dayNum(todayIso());
+  if(!dates.length){ // show current round only
+    return rs.filter(r=>dayNum(r.start)<=today && today<dayNum(r.end));
+  }
+  const minD = Math.min(...dates), maxD = Math.max(...dates, today);
+  return rs.filter(r=> dayNum(r.end)>minD && dayNum(r.start)<=maxD );
+}
+function defaultRoundIndex(list){
+  const today = dayNum(todayIso());
+  // most recent round that has already ended
+  let idx = -1;
+  list.forEach((r,i)=>{ if(dayNum(r.end)<=today) idx=i; });
+  if(idx<0) list.forEach((r,i)=>{ if(dayNum(r.start)<=today && today<dayNum(r.end)) idx=i; });
+  return idx<0 ? list.length-1 : idx;
+}
+
+/* ---------- Interest posting ---------- */
+function postInterest(round){
+  const key = round.end, rec = state.rounds[key];
+  if(!rec || rec.interest==null) return;
+  unpostSilently(key);
+  const { rows } = roundSplit(round.start, round.end, rec.interest);
+  rows.forEach(r=>{
+    const amt = r.interestRounded != null ? r.interestRounded : r.interest;
+    if(amt>0) state.txns.push({ id:uid(), personId:r.person.id, date:key, type:"in", amount:amt, note:"Interest credited", system:true, roundEnd:key });
+  });
+  rec.posted = true; save(); render();
+  toast("Interest posted to balances");
+}
+function unpostSilently(key){ state.txns = state.txns.filter(t=>!(t.system && t.roundEnd===key)); }
+function unpostInterest(round){ const key=round.end; unpostSilently(key); if(state.rounds[key]) state.rounds[key].posted=false; save(); render(); toast("Posted interest removed"); }
+
+/* ---------- Rendering ---------- */
+const $ = sel => document.querySelector(sel);
+function render(){
+  const v = $("#view");
+  $("#fab").hidden = !(ui.route==="people" || ui.route==="activity");
+  document.querySelectorAll(".nav button").forEach(b=> b.classList.toggle("on", b.dataset.nav===ui.route || (ui.route==="ledger" && b.dataset.nav==="people")) );
+  if(ui.route==="people") v.innerHTML = viewPeople();
+  else if(ui.route==="activity") v.innerHTML = viewActivity();
+  else if(ui.route==="interest") v.innerHTML = viewInterest();
+  else if(ui.route==="ledger") v.innerHTML = viewLedger();
+}
+
+function avatarFor(p){ const initials = (p.name||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase()||"?"; return `<div class="avatar" style="background:${p.color}">${esc(initials)}</div>`; }
+
+function viewPeople(){
+  if(!state.people.length){
+    return emptyState("group","No people yet","Add each person who keeps money in this account. You’ll log their deposits and withdrawals, and the app splits the interest by how much each kept in, and for how long.","Add a person","add-person");
+  }
+  const cards = state.people.map(p=>{
+    const bal = currentBalance(p.id);
+    const n = state.txns.filter(t=>t.personId===p.id).length;
+    return `<button class="card person" data-action="open-ledger" data-id="${p.id}">
+      ${avatarFor(p)}
+      <div class="meta"><div class="name">${esc(p.name)}</div><div class="sub">${n} ${n===1?"entry":"entries"}</div></div>
+      <div class="bal"><div class="v num">${money(bal)}</div><div class="l">balance</div></div>
+      <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
+    </button>`;
+  }).join("");
+  const totalBal = state.people.reduce((s,p)=>s+currentBalance(p.id),0);
+  return `<div class="section-label"><div class="eyebrow">People · ${state.people.length}</div><button class="linklike" data-action="add-person">+ Add person</button></div>
+    <div class="stack">${cards}</div>
+    <div class="card total-card" style="margin-top:14px"><div class="kv"><div class="k">Total in account</div><div class="v num">${money(totalBal)}</div></div></div>
+    <p class="muted-note" style="margin-top:14px">Tip: enter a person’s starting balance as their first deposit on the day the account began.</p>`;
+}
+
+function viewActivity(){
+  if(!state.txns.length){
+    if(!state.people.length) return emptyState("activity","Nothing logged yet","Add a person first, then record their deposits and withdrawals here.","Add a person","add-person");
+    return emptyState("activity","No entries yet","Tap + to record a deposit or withdrawal for any person.","Add an entry","quick-add");
+  }
+  const sorted = [...state.txns].sort((a,b)=> dayNum(b.date)-dayNum(a.date) || (b.system?-1:1));
+  const rows = sorted.map(t=>{
+    const p = state.people.find(x=>x.id===t.personId);
+    const isIn = t.type==="in";
+    const col = isIn ? "var(--pos)" : "var(--neg)";
+    const sign = isIn ? "+" : "−";
+    const tag = t.system ? `<span class="tag">interest</span>` : "";
+    return `<button class="card act" data-action="${t.system?"sys-info":"edit-txn"}" data-id="${t.id}" style="text-align:left">
+      <div class="dot" style="background:${col}"></div>
+      <div class="body">
+        <div class="top"><div class="who">${esc(p?p.name:"—")}</div><div class="amt num" style="color:${col}">${sign}${money(t.amount).slice(state.settings.currency.length).length?money(t.amount):money(t.amount)}</div></div>
+        <div class="when"><span>${fmtDate(t.date)}</span>${tag}${t.note&&!t.system?`<span style="color:var(--faint)">${esc(t.note)}</span>`:""}</div>
+      </div>
+    </button>`;
+  }).join("");
+  return `<div class="section-label"><div class="eyebrow">Activity · ${state.txns.length}</div></div><div class="stack">${rows}</div>`;
+}
+
+function viewInterest(){
+  const list = relevantRounds();
+  if(!list.length || !state.people.length){
+    return emptyState("coin","Interest split","Add people and log their deposits and withdrawals. Then pick a round here, enter the interest your bank paid, and the app shares it out by money-days.", state.people.length?null:"Add a person", "add-person");
+  }
+  if(ui.roundIndex==null || ui.roundIndex<0 || ui.roundIndex>=list.length) ui.roundIndex = defaultRoundIndex(list);
+  const round = list[ui.roundIndex];
+  const key = round.end;
+  state.rounds[key] ??= { interest:null, posted:false };
+  const rec = state.rounds[key];
+  const today = dayNum(todayIso());
+  const ended = dayNum(round.end) <= today;
+  const totalDays = daysBetween(round.start, round.end);
+
+  const split = roundSplit(round.start, round.end, rec.interest);
+  const hasMoney = split.totalMD > 0;
+
+  // round selector
+  const prevDis = ui.roundIndex<=0 ? "disabled" : "";
+  const nextDis = ui.roundIndex>=list.length-1 ? "disabled" : "";
+  const statusTxt = ended ? "Closed · "+totalDays+" days" : "In progress · "+totalDays+" days";
+  const bar = `<div class="round-bar">
+    <button class="stepper" data-action="round-prev" ${prevDis}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <div class="card lbl"><div class="eyebrow">Round</div><div class="rng num">${fmtShort(round.start)} → ${fmtShort(round.end).replace(/\d{4}$/,"")}${round.end.slice(0,4)}</div><div class="st">${statusTxt}</div></div>
+    <button class="stepper" data-action="round-next" ${nextDis}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>`;
+
+  // interest input
+  const lockNote = rec.posted ? `<div class="locknote"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> Posted to balances — remove below to edit.</div>` : "";
+  const input = `<div class="card interest-input">
+    <label class="eyebrow">Interest the bank paid this round</label>
+    <div class="row"><span class="cur">${state.settings.currency}</span>
+      <input type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${rec.interest!=null?rec.interest:""}" data-action="set-interest" ${rec.posted?"disabled":""}></div>
+    ${lockNote}
+  </div>`;
+
+  let body = "";
+  if(!hasMoney){
+    body = `<div class="card"><div class="empty" style="padding:34px 24px"><h3>No balances in this round</h3><p>No one had money in the account between ${fmtShort(round.start)} and ${fmtShort(round.end)}. Log deposits in that window, or pick another round.</p></div></div>`;
+  } else {
+    const rows = split.rows.slice().sort((a,b)=>b.md-a.md).map(r=>{
+      const pct = (r.share*100);
+      const iv = rec.interest!=null ? (r.interestRounded!=null?r.interestRounded:r.interest) : null;
+      const ivHtml = iv!=null ? `<div class="iv num ${iv<=0?"zero":""}">${money(iv)}</div>` : `<div class="iv num zero">—</div>`;
+      return `<div class="card split-row">
+        <div class="head"><div class="nm">${esc(r.person.name)}</div>${ivHtml}</div>
+        <div class="stats num"><span>${mdFmt(r.md)} ฿·days</span><span>${pct.toFixed(pct<10?2:1)}%</span></div>
+        ${sparkline(r.segments, round.start, round.end, r.maxBalance)}
+      </div>`;
+    }).join("");
+
+    const rateEst = split.totalMD * (state.settings.rate/100) / state.settings.dayCount;
+    let checkRow = "";
+    if(rec.interest!=null){
+      const diff = rec.interest - rateEst;
+      const cls = Math.abs(diff) <= Math.max(1, rateEst*0.02) ? "okv" : "warnv";
+      checkRow = `<div class="kv"><div class="k">Bank figure vs estimate<small>at ${state.settings.rate}% ÷ ${state.settings.dayCount} days</small></div><div class="v num ${cls}">${diff>=0?"+":"−"}${money(Math.abs(diff)).slice(state.settings.currency.length)}</div></div>`;
+    }
+    const totals = `<div class="card total-card">
+      <div class="kv"><div class="k">Total money-days</div><div class="v num">${mdFmt(split.totalMD)}</div></div>
+      <div class="kv"><div class="k">Average balance held<small>over ${totalDays} days</small></div><div class="v num">${money(split.totalMD/totalDays)}</div></div>
+      <div class="kv"><div class="k">Estimate at ${state.settings.rate}% (cross-check)</div><div class="v num accent">${money(rateEst)}</div></div>
+      ${checkRow}
+    </div>`;
+
+    // action
+    let action = "";
+    if(rec.interest==null){
+      action = `<button class="btn btn-gold" disabled>Enter the interest to split it</button>`;
+    } else if(rec.posted){
+      action = `<div class="card"><div class="posted-note"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Interest added to each balance</div></div>
+        <button class="linklike" data-action="unpost">Remove posted interest</button>`;
+    } else {
+      action = `<button class="btn btn-gold" data-action="post"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Post interest to balances</button>
+        <p class="muted-note" style="text-align:center;margin-top:8px">Adds each person’s share as a deposit dated ${fmtShort(round.end)}, so it earns in the next round.</p>`;
+    }
+
+    body = `<div class="section-label" style="margin-top:18px"><div class="eyebrow">Each person’s share</div></div>
+      <div class="stack">${rows}</div>
+      <div style="margin-top:14px" class="stack">${totals}</div>
+      <div style="margin-top:14px">${action}</div>`;
+  }
+
+  return bar + input + body;
+}
+
+function sparkline(segments, S, E, maxB){
+  const W = 320, H = 38, pad = 4;
+  const totalDays = daysBetween(S,E) || 1;
+  const top = (v)=> maxB>0 ? (H-pad) - (Math.max(0,v)/maxB)*(H-2*pad) : H-pad;
+  const x = (iso)=> (daysBetween(S,iso)/totalDays)*W;
+  let d = `M0 ${H}`;
+  let started = false;
+  segments.forEach(s=>{
+    const x1 = x(s.start), x2 = x(s.end), y = top(s.balance);
+    if(!started){ d += ` L${x1.toFixed(1)} ${H} L${x1.toFixed(1)} ${y.toFixed(1)}`; started=true; }
+    else d += ` L${x1.toFixed(1)} ${y.toFixed(1)}`;
+    d += ` L${x2.toFixed(1)} ${y.toFixed(1)}`;
+  });
+  d += ` L${W} ${H} Z`;
+  // top stroke line
+  let line = "";
+  segments.forEach((s,i)=>{ const x1=x(s.start),x2=x(s.end),y=top(s.balance); line += (i===0?`M${x1.toFixed(1)} ${y.toFixed(1)}`:` L${x1.toFixed(1)} ${y.toFixed(1)}`)+` L${x2.toFixed(1)} ${y.toFixed(1)}`; });
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${d}" fill="var(--accent)" fill-opacity="0.16"/>
+    <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function viewLedger(){
+  const p = state.people.find(x=>x.id===ui.personId);
+  if(!p){ ui.route="people"; return viewPeople(); }
+  const tx = personTxns(p.id);
+  let running = 0;
+  const rowsHtml = tx.map(t=>{
+    running += signed(t);
+    const isIn = t.type==="in"; const col = isIn?"var(--pos)":"var(--neg)"; const sign = isIn?"+":"−";
+    const tag = t.system?`<span class="tag">interest</span>`:"";
+    return `<button class="card ledge-row" data-action="${t.system?"sys-info":"edit-txn"}" data-id="${t.id}" style="text-align:left">
+      <div class="ld-l"><div class="dsc">${isIn?"Deposit":"Withdrawal"}${tag}</div><div class="dt">${fmtDate(t.date)}${t.note&&!t.system?" · "+esc(t.note):""}</div></div>
+      <div class="ld-r"><div class="a num" style="color:${col}">${sign}${money(t.amount).slice(state.settings.currency.length)}</div><div class="run num">${moneyPlain(running)}</div></div>
+    </button>`;
+  }).join("");
+  const list = tx.length ? `<div class="stack">${rowsHtml}</div>` : `<div class="card"><div class="empty" style="padding:30px"><p>No deposits or withdrawals yet for ${esc(p.name)}.</p></div></div>`;
+  return `<div class="ledger-head">
+      <button class="back" data-action="back-people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      ${avatarFor(p)}
+      <div class="lh-main"><div class="nm">${esc(p.name)}</div><div class="bl num">Balance ${money(currentBalance(p.id))}</div></div>
+      <button class="hbtn" style="background:var(--line-2);color:var(--dim)" data-action="edit-person" data-id="${p.id}"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+    </div>
+    <button class="btn btn-primary" data-action="quick-add" data-id="${p.id}" style="margin-bottom:14px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Add deposit or withdrawal</button>
+    ${list}`;
+}
+
+function emptyState(icon, title, text, btnLabel, btnAction){
+  const icons = {
+    group:`<path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20c.7-3.5 3.4-5.5 7-5.5s6.3 2 7 5.5M17 5a3 3 0 0 1 0 6"/>`,
+    activity:`<path d="M3 12h4l2.5-6 4 14L18 9l1.5 3H21"/>`,
+    coin:`<circle cx="12" cy="12" r="9"/><path d="M9.5 14.5c.4.9 1.3 1.5 2.5 1.5 1.4 0 2.4-.8 2.4-2 0-2.6-4.6-1.6-4.6-4 0-1.1 1-1.9 2.3-1.9 1.1 0 2 .5 2.4 1.4"/>`
+  };
+  const btn = btnLabel ? `<button class="btn btn-primary" data-action="${btnAction}">${btnLabel}</button>` : "";
+  return `<div class="empty"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${icons[icon]||icons.coin}</svg></div><h3>${title}</h3><p>${text}</p>${btn}</div>`;
+}
+
+/* ---------- Sheets ---------- */
+function openSheet(html){ $("#sheet-content").innerHTML = `<div class="sheet-body">${html}</div>`; $("#sheet").classList.add("show"); $("#overlay").classList.add("show"); }
+function closeSheet(){ $("#sheet").classList.remove("show"); $("#overlay").classList.remove("show"); }
+
+function personForm(person){
+  const editing = !!person;
+  return `<div class="sheet-head"><h2>${editing?"Edit person":"Add person"}</h2><button class="x" data-action="dismiss">✕</button></div>
+    <div class="sheet-body">
+    <div class="field"><label>Name</label><input type="text" id="f-name" placeholder="e.g. Mom, Nan, my savings" value="${editing?esc(person.name):""}" autocomplete="off"><div class="err" id="e-name"></div></div>
+    <div class="form-actions">
+      ${editing?`<button class="btn btn-danger" data-action="delete-person" data-id="${person.id}">Delete</button>`:""}
+      <button class="btn btn-primary" data-action="save-person" data-id="${editing?person.id:""}">${editing?"Save":"Add person"}</button>
+    </div></div>`;
+}
+
+function txnForm(txn, presetPerson){
+  const editing = !!txn;
+  const pid = editing ? txn.personId : (presetPerson||"");
+  const type = editing ? txn.type : "in";
+  const opts = state.people.map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.name)}</option>`).join("");
+  return `<div class="sheet-head"><h2>${editing?"Edit entry":"New entry"}</h2><button class="x" data-action="dismiss">✕</button></div>
+    <div class="sheet-body">
+    <div class="field"><label>Person</label><select id="f-person">${opts}</select></div>
+    <div class="field"><label>Type</label>
+      <div class="seg" id="f-seg">
+        <button type="button" data-type="in" class="${type==="in"?"sel-in":""}"><span class="d" style="background:var(--pos)"></span> Deposit</button>
+        <button type="button" data-type="out" class="${type==="out"?"sel-out":""}"><span class="d" style="background:var(--neg)"></span> Withdrawal</button>
+      </div></div>
+    <div class="field"><label>Amount</label><div class="amt-field"><span>${state.settings.currency}</span><input type="number" inputmode="decimal" step="0.01" id="f-amount" placeholder="0.00" value="${editing?txn.amount:""}"></div><div class="err" id="e-amount"></div></div>
+    <div class="field"><label>Date</label><input type="date" id="f-date" value="${editing?txn.date:todayIso()}"><div class="err" id="e-date"></div></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="f-note" placeholder="e.g. salary, rent" value="${editing&&txn.note?esc(txn.note):""}" autocomplete="off"></div>
+    <div class="form-actions">
+      ${editing?`<button class="btn btn-danger" data-action="delete-txn" data-id="${txn.id}">Delete</button>`:""}
+      <button class="btn btn-primary" data-action="save-txn" data-id="${editing?txn.id:""}">${editing?"Save":"Add entry"}</button>
+    </div></div>`;
+}
+
+function menuSheet(){
+  return `<div class="sheet-head"><h2>Menu</h2><button class="x" data-action="dismiss">✕</button></div>
+  <div class="sheet-body">
+    <button class="menu-item" data-action="howto"><div class="mi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7M12 17h.01"/></svg></div><div><div class="mt">How it works</div><div class="ms">The money-days method, explained</div></div></button>
+    <button class="menu-item" data-action="settings"><div class="mi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></div><div><div class="mt">Settings</div><div class="ms">Currency, cross-check rate</div></div></button>
+    <button class="menu-item" data-action="export"><div class="mi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></div><div><div class="mt">Export data</div><div class="ms">Save a backup file</div></div></button>
+    <button class="menu-item" data-action="import-pick"><div class="mi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg></div><div><div class="mt">Import data</div><div class="ms">Restore from a backup file</div></div></button>
+    <button class="menu-item" data-action="sample"><div class="mi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 21.6 7.6 18.2l.9-5.5-4-3.9L10 8z"/></svg></div><div><div class="mt">Load sample data</div><div class="ms">See a worked example</div></div></button>
+    <button class="menu-item danger" data-action="clear"><div class="mi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M6 7l1 13h10l1-13"/></svg></div><div><div class="mt">Clear all data</div><div class="ms">Erase everything on this device</div></div></button>
+    <p class="muted-note" style="margin-top:14px">${storageOk?"Your data is saved on this device only.":"⚠ Saving to this device isn’t available — export regularly to keep a backup."}</p>
+  </div>`;
+}
+
+function settingsSheet(){
+  const s = state.settings;
+  return `<div class="sheet-head"><h2>Settings</h2><button class="x" data-action="dismiss">✕</button></div>
+  <div class="sheet-body">
+    <div class="field"><label>Currency symbol</label><input type="text" id="s-cur" value="${esc(s.currency)}" maxlength="3"></div>
+    <div class="callout" style="margin:6px 0 4px">These two only drive the optional <b>cross-check estimate</b> — they never change how interest is split. The split always uses the exact figure you enter.</div>
+    <div class="field"><label>Annual interest rate (%)</label><input type="number" inputmode="decimal" step="0.01" id="s-rate" value="${s.rate}"></div>
+    <div class="field"><label>Day-count basis (days per year)</label><input type="number" inputmode="numeric" id="s-days" value="${s.dayCount}"></div>
+    <div class="form-actions"><button class="btn btn-primary" data-action="save-settings">Save settings</button></div>
+  </div>`;
+}
+
+function howtoSheet(){
+  return `<div class="sheet-head"><h2>How it works</h2><button class="x" data-action="dismiss">✕</button></div>
+  <div class="sheet-body howto">
+    <p>One account holds several people’s money. Everyone’s deposits and withdrawals sit together, so the bank pays one lump of interest. This app shares that interest out fairly.</p>
+    <h4>Money-days</h4>
+    <p>Money earns interest for every day it stays in. So for each person we add up <code>balance × days held</code> across every stretch between their transactions. That total is their <b>money-days</b>.</p>
+    <h4>The split</h4>
+    <p>Each person gets <code>their money-days ÷ everyone’s money-days × the interest</code>. Because these are slices of the real figure, they always add back to exactly what the bank paid.</p>
+    <h4>Rounds</h4>
+    <p>Interest is worked out per half-year, closing 21 Jun and 21 Dec. Pick a round on the Interest tab and type in the interest the bank paid for it.</p>
+    <h4>Posting interest</h4>
+    <p>“Post interest to balances” adds each person’s share as a deposit on the closing date, so next round it earns interest too — just like the bank compounds it.</p>
+  </div>`;
+}
+
+/* ---------- Validation + actions ---------- */
+function savePerson(id){
+  const name = $("#f-name").value.trim();
+  if(!name){ $("#e-name").textContent = "Give this person a name."; return; }
+  if(id){ const p = state.people.find(x=>x.id===id); if(p) p.name = name; }
+  else { state.people.push({ id:uid(), name, color:PALETTE[state.people.length % PALETTE.length] }); }
+  save(); closeSheet(); render();
+}
+function deletePerson(id){
+  confirmAsk("Delete this person?", "Their deposits, withdrawals and posted interest will be removed too. This can’t be undone.", "Delete", ()=>{
+    state.people = state.people.filter(p=>p.id!==id);
+    state.txns = state.txns.filter(t=>t.personId!==id);
+    if(ui.route==="ledger") ui.route="people";
+    save(); closeSheet(); render(); toast("Person deleted");
+  });
+}
+let pendingType = "in";
+function saveTxn(id){
+  const pid = $("#f-person").value;
+  const amount = parseFloat($("#f-amount").value);
+  const date = $("#f-date").value;
+  let ok = true;
+  $("#e-amount").textContent=""; $("#e-date").textContent="";
+  if(!pid){ toast("Add a person first"); return; }
+  if(!(amount>0)){ $("#e-amount").textContent="Enter an amount greater than zero."; ok=false; }
+  if(!date){ $("#e-date").textContent="Pick a date."; ok=false; }
+  if(!ok) return;
+  const note = $("#f-note").value.trim();
+  if(id){ const t = state.txns.find(x=>x.id===id); if(t){ t.personId=pid; t.type=pendingType; t.amount=amount; t.date=date; t.note=note; } }
+  else { state.txns.push({ id:uid(), personId:pid, type:pendingType, amount, date, note }); }
+  save(); closeSheet(); render();
+}
+function deleteTxn(id){
+  state.txns = state.txns.filter(t=>t.id!==id);
+  save(); closeSheet(); render(); toast("Entry deleted");
+}
+
+/* confirm modal reuses sheet */
+function confirmAsk(title, body, danger, onYes){
+  openSheet(`<div class="sheet-head"><h2>${title}</h2><button class="x" data-action="dismiss">✕</button></div>
+    <div class="sheet-body"><p style="color:var(--dim);font-size:14px;line-height:1.5;margin:0 0 4px">${body}</p>
+    <div class="form-actions"><button class="btn btn-ghost" data-action="dismiss">Cancel</button><button class="btn btn-danger" id="confirm-yes">${danger}</button></div></div>`);
+  setTimeout(()=>{ const b=$("#confirm-yes"); if(b) b.onclick=()=>onYes(); },0);
+}
+
+/* ---------- Export / import / sample ---------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "interest-split-backup-"+todayIso()+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+  closeSheet(); toast("Backup downloaded");
+}
+function importPick(){
+  const inp = document.createElement("input"); inp.type="file"; inp.accept="application/json,.json";
+  inp.onchange = ()=>{ const f = inp.files[0]; if(!f) return; const r = new FileReader();
+    r.onload = ()=>{ try{ const data = JSON.parse(r.result); if(!data || !Array.isArray(data.people)) throw 0; state = data; normalize(); save(); closeSheet(); ui.route="people"; render(); toast("Data imported"); }
+      catch(e){ toast("That file couldn’t be read"); } };
+    r.readAsText(f); };
+  inp.click();
+}
+function loadSample(){
+  confirmAsk("Load sample data?","This replaces what’s here with a small worked example you can explore, then clear.","Load sample",()=>{
+    const A=uid(),B=uid(),C=uid();
+    state = blankState();
+    state.people = [ {id:A,name:"Mom",color:PALETTE[0]}, {id:B,name:"Dad",color:PALETTE[1]}, {id:C,name:"Nan",color:PALETTE[2]} ];
+    const tx = (pid,type,amount,date)=>state.txns.push({id:uid(),personId:pid,type,amount,date});
+    tx(A,"in",50000,"2025-12-13"); tx(A,"out",10000,"2026-02-10"); tx(A,"in",8000,"2026-04-05");
+    tx(B,"in",30000,"2025-12-21"); tx(B,"out",5000,"2026-03-01"); tx(B,"out",5000,"2026-05-15");
+    tx(C,"in",19735.42,"2025-12-30"); tx(C,"in",7540.28,"2026-02-03"); tx(C,"out",6000,"2026-04-28");
+    state.rounds["2026-06-21"] = { interest:1284.50, posted:false };
+    save(); closeSheet(); ui.route="interest"; ui.roundIndex=null; render(); toast("Sample loaded");
+  });
+}
+function clearAll(){
+  confirmAsk("Clear all data?","Everything on this device will be erased. Export a backup first if you might need it.","Erase everything",()=>{
+    state = blankState(); save(); closeSheet(); ui={route:"people",personId:null,roundIndex:null}; render(); toast("All data cleared");
+  });
+}
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2400); }
+
+/* ---------- Event wiring ---------- */
+document.addEventListener("click", e=>{
+  const seg = e.target.closest("#f-seg button");
+  if(seg){ pendingType = seg.dataset.type; document.querySelectorAll("#f-seg button").forEach(b=>{ b.classList.remove("sel-in","sel-out"); }); seg.classList.add(pendingType==="in"?"sel-in":"sel-out"); return; }
+  const el = e.target.closest("[data-action],[data-nav]");
+  if(!el) return;
+  const nav = el.dataset.nav;
+  if(nav){ ui.route = nav; if(nav==="interest") ui.roundIndex=null; render(); window.scrollTo(0,0); return; }
+  const a = el.dataset.action, id = el.dataset.id;
+  switch(a){
+    case "dismiss": closeSheet(); break;
+    case "menu": openSheet(menuSheet()); break;
+    case "settings": openSheet(settingsSheet()); break;
+    case "howto": openSheet(howtoSheet()); break;
+    case "add-person": pendingType="in"; openSheet(personForm(null)); setTimeout(()=>{const i=$("#f-name"); if(i) i.focus();},250); break;
+    case "edit-person": { const p=state.people.find(x=>x.id===id); openSheet(personForm(p)); break; }
+    case "save-person": savePerson(id); break;
+    case "delete-person": deletePerson(id); break;
+    case "quick-add": { if(!state.people.length){ openSheet(personForm(null)); break; } pendingType="in"; openSheet(txnForm(null, id||ui.personId||state.people[0].id)); break; }
+    case "edit-txn": { const t=state.txns.find(x=>x.id===id); pendingType=t.type; openSheet(txnForm(t)); break; }
+    case "save-txn": saveTxn(id); break;
+    case "delete-txn": deleteTxn(id); break;
+    case "sys-info": toast("Posted from the Interest tab — manage it there"); break;
+    case "open-ledger": ui.route="ledger"; ui.personId=id; render(); window.scrollTo(0,0); break;
+    case "back-people": ui.route="people"; render(); window.scrollTo(0,0); break;
+    case "round-prev": if(ui.roundIndex>0){ui.roundIndex--; render();} break;
+    case "round-next": { const L=relevantRounds(); if(ui.roundIndex<L.length-1){ui.roundIndex++; render();} break; }
+    case "post": { const L=relevantRounds(); postInterest(L[ui.roundIndex]); break; }
+    case "unpost": { const L=relevantRounds(); unpostInterest(L[ui.roundIndex]); break; }
+    case "export": exportData(); break;
+    case "import-pick": importPick(); break;
+    case "sample": loadSample(); break;
+    case "clear": clearAll(); break;
+    case "save-settings": {
+      const cur=$("#s-cur").value.trim()||"฿"; const rate=parseFloat($("#s-rate").value); const days=parseInt($("#s-days").value,10);
+      state.settings.currency=cur; if(rate>0) state.settings.rate=rate; if(days>0) state.settings.dayCount=days;
+      save(); closeSheet(); render(); toast("Settings saved"); break;
+    }
+  }
+});
+// interest figure input (change/blur)
+document.addEventListener("input", e=>{
+  if(e.target.dataset && e.target.dataset.action==="set-interest"){
+    const L=relevantRounds(); const round=L[ui.roundIndex]; if(!round) return;
+    const key=round.end; state.rounds[key] ??= {interest:null,posted:false};
+    const v=e.target.value.trim();
+    state.rounds[key].interest = v==="" ? null : parseFloat(v);
+    save();
+    // light re-render of body without losing focus: only update totals/rows by full render is heavy; debounce
+    clearTimeout(window.__iT); window.__iT=setTimeout(()=>{ const focused=document.activeElement===e.target; if(!focused){ render(); } },10);
+  }
+});
+// re-render when interest input loses focus to refresh the split
+document.addEventListener("focusout", e=>{
+  if(e.target.dataset && e.target.dataset.action==="set-interest"){ render(); }
+});
+
+/* ---------- Boot ---------- */
+(async function(){ await load(); render(); })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
